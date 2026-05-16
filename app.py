@@ -34,42 +34,71 @@ st.write(
 st.markdown("---")
 
 # =========================================================
-# CREATE SYNTHETIC DATASET
+# CREATE REALISTIC SYNTHETIC DATASET
 # =========================================================
 
 np.random.seed(42)
 
 n = 300
 
-batting_avg = np.random.uniform(15, 60, n)
+# Batting Average
+batting_avg = np.random.normal(32, 10, n)
+batting_avg = np.clip(batting_avg, 10, 60)
 
-consistency_idx = np.random.uniform(10, 40, n)
+# Consistency Index
+consistency_idx = np.random.normal(25, 8, n)
+consistency_idx = np.clip(consistency_idx, 5, 50)
 
-form_trend = np.random.uniform(-10, 10, n)
+# Form Trend
+form_trend = np.random.normal(0, 5, n)
+form_trend = np.clip(form_trend, -15, 15)
 
-strike_rate = np.random.uniform(50, 120, n)
+# Strike Rate
+strike_rate = np.random.normal(78, 12, n)
+strike_rate = np.clip(strike_rate, 40, 130)
 
-experience = np.random.uniform(2, 6, n)
+# Experience
+experience = np.random.uniform(1, 10, n)
+
+# Boundary Efficiency
+boundary_eff = np.random.normal(45, 12, n)
+boundary_eff = np.clip(boundary_eff, 10, 90)
+
+# =========================================================
+# REALISTIC CLUTCH SCORE
+# =========================================================
 
 clutch_score = (
-    batting_avg * 0.4
-    + strike_rate * 0.3
-    + consistency_idx * 0.3
+    batting_avg * 0.6
+    + consistency_idx * 0.25
+    + strike_rate * 0.15
 )
 
-boundary_eff = np.random.uniform(20, 80, n)
+# =========================================================
+# FUTURE AVERAGE TARGET
+# =========================================================
 
 future_avg = (
-    batting_avg * 0.6
-    + consistency_idx * 0.2
-    + form_trend * 0.2
+    batting_avg * 0.75
+    + consistency_idx * 0.15
+    + form_trend * 0.10
 )
 
+future_avg = np.clip(future_avg, 10, 70)
+
+# =========================================================
+# ELITE PLAYER LOGIC
+# =========================================================
+
 is_elite = (
-    (batting_avg > 40)
-    & (consistency_idx > 25)
-    & (clutch_score > 45)
+    (batting_avg >= 45)
+    & (consistency_idx >= 30)
+    & (strike_rate >= 75)
 ).astype(int)
+
+# =========================================================
+# DATAFRAME
+# =========================================================
 
 df = pd.DataFrame({
 
@@ -159,7 +188,7 @@ batting_avg_input = st.number_input(
     "Batting Average",
     min_value=0.0,
     max_value=100.0,
-    value=45.0
+    value=35.0
 )
 
 st.caption("Average runs scored per dismissal.")
@@ -170,7 +199,7 @@ consistency_input = st.number_input(
     "Consistency Index",
     min_value=0.0,
     max_value=100.0,
-    value=30.0
+    value=25.0
 )
 
 st.caption("Measures how consistently the player performs.")
@@ -181,7 +210,7 @@ form_input = st.number_input(
     "Form Trend",
     min_value=-20.0,
     max_value=20.0,
-    value=5.0
+    value=2.0
 )
 
 st.caption("Shows whether current form is improving or declining.")
@@ -192,7 +221,7 @@ strike_input = st.number_input(
     "Strike Rate",
     min_value=0.0,
     max_value=200.0,
-    value=85.0
+    value=80.0
 )
 
 st.caption("Runs scored per 100 balls.")
@@ -203,7 +232,7 @@ experience_input = st.number_input(
     "Experience",
     min_value=0.0,
     max_value=20.0,
-    value=4.0
+    value=5.0
 )
 
 st.caption("Represents overall experience level.")
@@ -214,7 +243,7 @@ clutch_input = st.number_input(
     "Clutch Score",
     min_value=0.0,
     max_value=100.0,
-    value=60.0
+    value=50.0
 )
 
 st.caption("Performance in pressure situations.")
@@ -225,7 +254,7 @@ boundary_input = st.number_input(
     "Boundary Efficiency",
     min_value=0.0,
     max_value=100.0,
-    value=50.0
+    value=45.0
 )
 
 st.caption("Efficiency in hitting boundaries.")
@@ -272,6 +301,26 @@ if st.button("Predict Performance"):
     elite_probability = log_model.predict_proba(scaled_log)[0][1]
 
     # =====================================================
+    # REALISTIC PLAYER RATING
+    # =====================================================
+
+    if batting_avg_input < 25:
+
+        player_level = "Poor Player ❌"
+
+    elif batting_avg_input < 35:
+
+        player_level = "Average Player 📊"
+
+    elif batting_avg_input < 45:
+
+        player_level = "Good Player 👍"
+
+    else:
+
+        player_level = "Elite Batter 🌟"
+
+    # =====================================================
     # RESULTS
     # =====================================================
 
@@ -279,12 +328,14 @@ if st.button("Predict Performance"):
 
     st.header("🏏 Scouting Report")
 
+    st.write(f"### Player Rating : {player_level}")
+
     st.write(f"### Predicted Future Average : {future_prediction:.2f}")
 
     st.write(f"### Elite Probability : {elite_probability:.2%}")
 
     # =====================================================
-    # CLASSIFICATION
+    # FINAL CLASSIFICATION
     # =====================================================
 
     if elite_probability > 0.5:
@@ -303,4 +354,4 @@ if st.button("Predict Performance"):
 
     st.write("• Logistic Regression predicts elite player probability.")
 
-    st.write("• Dataset used is synthetic cricket performance data.")
+    st.write("• Dataset used is realistic synthetic cricket data.")
